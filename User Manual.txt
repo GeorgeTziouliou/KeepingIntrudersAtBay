@@ -1,0 +1,239 @@
+Python Libraries
+
+Ensure Python 3 is installed (usually default on Raspberry Pi OS).
+
+Open a terminal on the Raspberry Pi.
+
+Install required libraries using pip. Direct system installation was used for this project (virtual environments recommended for isolation):
+
+pip install opencv-python dlib numpy scikit-learn Flask lgpio mfrc522 scipy tqdm
+# Or use sudo pip install ... if installing system-wide
+
+
+
+Project Code
+
+Copy all project Python files (CameraAndWebsite.py, door_control.py, lcd_controller.py, rfid_routes.py, model_create.py, etc.), HTML (index.html), CSS (styles.css), and JavaScript (script.js) into a single directory on the Raspberry Pi (e.g., /home/pi/SmartSecurity).
+
+
+
+Model Files
+
+Place the following files into the same directory as the project code:
+
+face_recognizer_model.pkl (Your trained KNN model)
+
+label_names.pkl (Generated during training)
+
+shape_predictor_68_face_landmarks.dat (dlib model file)
+
+dlib_face_recognition_resnet_model_v1.dat (dlib model file)
+
+
+
+Download dlib models: If you don't have the .dat files, search for "download dlib models" - they are usually available from the dlib website or repository examples.
+
+
+
+Face Recognition Model Training
+
+The system requires a trained KNN model to recognize faces.
+
+
+
+Dataset Preparation
+
+Create a base directory named CelebrityFaces (or update DATA_PATH in model_create.py).
+
+Inside this directory, create subdirectories for each person you want to train the model on. Name each subdirectory exactly as you want the person identified (e.g., Robert_Downey_Jr, Hugh_Jackman).
+
+Place multiple images (ideally 50-100+) of each person inside their respective subdirectory. Use common image formats (.jpg, .png). Ensure images clearly show the face under various conditions if possible.
+
+
+
+
+
+Running the Training Script
+
+Navigate to your project directory in the terminal.
+
+Run the script: python model_create.py
+
+The script will scan the dataset, detect faces, extract embeddings, train the KNN model (k=3), and save face_recognizer_model.pkl and label_names.pkl in the project directory. Observe the console for progress and any errors.
+
+
+System Configuration
+
+
+RFID Tag Preparation
+
+Each person recognized by the face model needs a corresponding RFID tag programmed with their exact name (matching the subdirectory name used during training, case-sensitive comparison may apply depending on check_face_match logic - currently case-insensitive).
+
+
+
+You also need at least one tag programmed with the literal string "Other" if you intend to use the "Allow Other" functionality.
+
+
+
+How to Write:
+
+Run the main system (python start.py).
+
+Access the web interface.
+
+Click the "Write RFID" button.
+
+Enter the exact name (e.g., Robert_Downey_Jr) or Other into the modal popup.
+
+Hold the target RFID tag near the reader and click the "Write" button in the modal.
+
+Confirm the success message in the RFID result area. Repeat for all necessary tags.
+Alternatively, use the standalone rfid_script.py if preferred.
+
+
+
+Code Configuration Constants
+Review constants near the top of CameraAndWebsite.py:
+
+CONSECUTIVE_FRAMES_THRESHOLD: Set the number of successful frames needed for unlock (default: 5). Higher values increase security against glitches but may feel less responsive.
+
+USE_BLINK_DETECTION: Set to True or False to enable/disable the blink check part of liveness detection.
+
+DEBUG_FORCE_LIVENESS_TRUE: Keep as False for normal operation. Set to True only for temporarily bypassing liveness checks to debug streak/MFA logic.
+
+
+
+Running the System
+
+Starting the Application
+
+Open a terminal on the Raspberry Pi.
+
+Navigate to the directory containing all the project files.
+
+Run the start script: python start.py
+
+The script will check dependencies and then launch the main Flask application (CameraAndWebsite.py). Observe the console for initialization messages (model loading, RFID, LCD, threads, Flask server started).
+
+
+
+Accessing the Web Interface
+
+On another computer or device connected to the same local network as the Raspberry Pi, open a web browser.
+
+Find the Raspberry Pi's IP address (e.g., using ip addr in the Pi terminal).
+
+Navigate to http://<RaspberryPi_IP_Address>:5000.
+
+The web interface should load, showing the video streams and controls.
+
+
+
+Stopping the Application
+
+Go back to the terminal window on the Raspberry Pi where the system is running.
+
+Press CTRL + C.
+
+Wait for the cleanup messages to appear in the console, indicating hardware resources have been released.
+
+
+
+User Guide: Authentication
+
+How to Gain Access
+
+Ensure the system is running and the simulated door is "Locked" (check LCD or Web UI).
+
+Approach the camera so your face is clearly visible (approx. 0.6-1.0 meters away).
+
+Simultaneously, present your registered RFID tag close to the MFRC522 reader module.
+
+Hold the position steady for a few moments.
+
+Observe the feedback (Section 7.2 & 7.3). If all checks pass consistently for CONSECUTIVE_FRAMES_THRESHOLD frames, the system will indicate "Access Granted" and the status will change to "Unlocked".
+
+
+
+Understanding Feedback (LCD)
+The LCD provides simple, local status updates:
+
+Door Status: LOCKED / Door Status: UNLOCKED: Current state of the simulated lock.
+
+Reading RFID...: May display briefly while scanning.
+
+Access Granted: Shows briefly upon successful authentication.
+
+Error messages may appear if issues occur.
+
+
+
+Understanding Feedback (Web Interface Annotations)
+The live video streams provide detailed visual feedback:
+
+Bounding Box: A rectangle drawn around detected faces.
+
+Box Color:
+
+Green: Sustained match threshold met; unlock triggered.
+
+Yellow/Cyan: Instantaneous checks passed (Face/Live/RFID); building streak towards threshold.
+
+Red: Liveness check failed (only shown on "With Liveness" stream if liveness is enabled globally).
+
+Blue: Face detected but recognized as "Unknown".
+
+Grey: Recognized/Other but failed MFA (e.g., wrong/no RFID, door already unlocked) or Liveness OFF.
+
+Text Above Box:
+
+Name: Confidence%: The recognized name ("Other" if low confidence) and the confidence score.
+
+Liveness: Live/Fake: The liveness check result (only shown on "With Liveness" stream if liveness is enabled globally).
+
+Text Below Box:
+
+RFID Match: YES/NO/N/A: Indicates if a tag was present and if its data matched the recognized face. N/A usually means the door wasn't locked or the face was Unknown/Error.
+
+Streak: X/N: Shows the current consecutive success frame count (X) out of the required threshold (N). Resets to 0 on failure.
+
+
+Web Interface Guide
+
+Overview: The web page provides monitoring and control.
+
+Dual Video Streams:
+
+Left ("With Liveness"): Shows full annotations including liveness status.
+
+Right ("Without Liveness"): Shows basic annotations (name, confidence) for comparison, hiding liveness-specific feedback.
+
+
+Status Indicators (Below Video):
+
+Door Status: Text ("Door Locked"/"Door Unlocked") and coloured dot reflecting the simulated lock state.
+
+RFID Result Area: Shows data read from the last detected/read RFID card, or indicates no card is present. Updates based on background scan or manual read button.
+
+
+
+System Toggles (Middle Section):
+
+Use Liveness Detection: Enables/disables the enforcement of liveness checks in the unlock logic and toggles detailed liveness annotations on the left video stream.
+
+Allow "Other" Face Category: Enables/disables access for faces classified as "Other" when presented with an RFID tag programmed with "Other".
+
+
+Manual Door Control (Door Control Panel):
+
+The toggle switch allows manually setting the simulated state to "Locked" or "Unlocked", overriding the automatic logic temporarily (until auto-relock).
+
+
+
+RFID Management (RFID Control Panel):
+
+Read RFID Button: Triggers an immediate, blocking read attempt and displays the result.
+
+Write RFID Button: Opens a modal popup.
+
+Write Modal: Enter the exact name (e.g., Robert_Downey_Jr) or Other to write, place the tag, click "Write".

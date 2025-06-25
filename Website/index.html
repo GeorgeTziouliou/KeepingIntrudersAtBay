@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Home Security: Keeping Intruders at bay with Your Face</title>
+    <!-- Link to the external CSS stylesheet -->
+    <link rel="stylesheet" href="/static/styles.css">
+    <!-- Internal styles for elements specific to this page layout -->
+    <style>
+        /* Container for the split video feeds */
+        .split-video-container {
+            display: flex;
+            justify-content: space-between; /* Space out the video divs */
+            width: 100%;
+            max-width: 1200px; /* Limit maximum width */
+            margin: 0 auto 20px; /* Center horizontally, add bottom margin */
+            gap: 2%; /* Add a small gap between videos */
+        }
+        /* Styling for each half of the video container */
+        .video-half {
+            width: 49%; /* Use slightly less than 50% to accommodate the gap */
+            background-color: #000; /* Black background if image fails */
+            aspect-ratio: 16/9; /* Maintain video aspect ratio */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff; /* Text color for fallback */
+            position: relative; /* Needed for absolute positioning of the label */
+            border-radius: 8px; /* Optional: rounded corners */
+            overflow: hidden; /* Clip content like the label if needed */
+        }
+        /* Ensure the video feed images fill their container */
+        .video-half img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Scale image while maintaining aspect ratio */
+        }
+        /* Styling for the text label overlay on each video feed */
+        .video-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0,0,0,0.6); /* Semi-transparent black */
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 1; /* Make sure label is on top of the image */
+        }
+        /* Container for the system settings toggles */
+        .toggle-section {
+            display: flex;
+            align-items: center;
+            margin: 25px 0; /* Add vertical margin */
+            justify-content: center; /* Center the toggles */
+            gap: 30px; /* Space between toggle groups */
+            flex-wrap: wrap; /* Allow toggles to wrap on smaller screens */
+        }
+        /* Styling for each individual toggle (label + switch) */
+        .toggle-item {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Space between label and switch */
+        }
+        /* Styling for the text label of a toggle switch */
+        .toggle-label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Page Header -->
+    <header>
+        <h1>Smart Home Security: Keeping Intruders at bay with Your Face</h1>
+    </header>
+
+    <!-- Main content container -->
+    <div class="container">
+
+        <!-- Section for displaying the two video feeds side-by-side -->
+        <div class="split-video-container">
+            <!-- Left video feed (With Liveness Detection) -->
+            <div class="video-half">
+                <div class="video-label">With Liveness Detection</div>
+                <!-- The image element where the video stream will be displayed -->
+                <img id="videoFeedWithLiveness" src="/video_feed_with_liveness" alt="Live Video Feed With Liveness">
+            </div>
+            <!-- Right video feed (Without Liveness Detection) -->
+            <div class="video-half">
+                <div class="video-label">Without Liveness Detection</div>
+                <!-- The image element where the video stream will be displayed -->
+                <img id="videoFeedWithoutLiveness" src="/video_feed_without_liveness" alt="Live Video Feed Without Liveness">
+            </div>
+        </div>
+
+        <!-- Section for System Settings Toggles -->
+        <div class="toggle-section">
+            <!-- Toggle for enabling/disabling Liveness Detection -->
+            <div class="toggle-item">
+                <span class="toggle-label">Use Liveness Detection:</span>
+                <label class="switch">
+                    <input type="checkbox" id="livenessToggle" checked onchange="toggleLiveness()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <!-- Toggle for allowing/disallowing the "Other" face category -->
+            <div class="toggle-item">
+                <span class="toggle-label">Allow "Other" Face Category:</span>
+                <label class="switch">
+                    <input type="checkbox" id="allowOtherToggle" onchange="toggleAllowOther()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Door Control Section -->
+        <div class="door-control">
+            <div class="door-status">
+                <!-- Door Status Indicator (Dot and Text) -->
+                <div class="status-indicator">
+                    <div class="status-dot locked" id="statusDot"></div> <!-- Dot color updated by JS -->
+                    <span id="statusText">Door Locked</span> <!-- Text updated by JS -->
+                </div>
+                <!-- Manual Door Lock Toggle Switch -->
+                <label class="switch">
+                    <input type="checkbox" id="doorToggle" onchange="toggleDoor()"> <!-- Calls JS function on change -->
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- RFID Control Section -->
+        <div class="rfid-control">
+            <!-- Buttons for RFID Actions -->
+            <div class="rfid-actions">
+                <button onclick="readRFID()">Read RFID</button> <!-- Calls JS function -->
+                <button onclick="showWriteModal()">Write RFID</button> <!-- Calls JS function to open modal -->
+            </div>
+            <!-- Area to display RFID operation results -->
+            <div id="rfidResult" class="rfid-result">
+                RFID results will appear here
+            </div>
+        </div>
+
+        <!-- Modal Dialog for Writing RFID Data -->
+        <div id="writeModal" class="modal">
+            <div class="modal-content">
+                <!-- Close button for the modal -->
+                <span class="close" onclick="closeWriteModal()">×</span>
+                <h2>Write to RFID Card</h2>
+                <!-- Input field for data to write -->
+                <input type="text" id="writeData" placeholder="Enter data to write">
+                <!-- Button to trigger the write operation -->
+                <button onclick="writeRFID()">Write</button> <!-- Calls JS function -->
+            </div>
+        </div>
+
+    </div> <!-- End of main container -->
+
+    <!-- Page Footer -->
+    <footer class="footer">
+        <p>Created by Georghios Tziouliou | Student ID: 2412649</p>
+        <p>University Of Dundee</p>
+    </footer>
+
+    <!-- Link to the external JavaScript file -->
+    <script src="/static/script.js"></script>
+</body>
+</html>
